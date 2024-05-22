@@ -16,6 +16,8 @@
 
 package ca.uwaterloo.flix.language.ast
 
+import ca.uwaterloo.flix.language.ast.Ast.Permission.{JavaInterop, UncheckedCast}
+
 import java.nio.file.Path
 import java.util.Objects
 
@@ -34,18 +36,24 @@ object Ast {
     /**
      * Permission to use Java interoperability features.
      */
-    case object JavaInterop
+    case object JavaInterop extends Permission
 
     /**
      * Permission to use unchecked casts.
      */
-    case object UncheckedCast
+    case object UncheckedCast extends Permission
 
     /**
      * Permission to have an effect.
      */
-    case object Effect
+    case object Effect extends Permission
   }
+
+  private val fullPermission: Set[Permission] = Set(
+    Permission.JavaInterop,
+    Permission.UncheckedCast,
+    Permission.Effect
+  )
 
   /**
     * A common super-type for inputs.
@@ -55,6 +63,21 @@ object Ast {
   }
 
   object Input {
+
+    /**
+     * A source from the standard library.
+     */
+    case class StdLib(name: String, text: String) extends Input {
+      override def hashCode(): Int = name.hashCode
+
+      override def equals(obj: Any): Boolean = obj match {
+        case that: StdLib => this.name == that.name
+        case _ => false
+      }
+
+      // The standard library is fully trusted.
+      def perms: Set[Permission] = fullPermission
+    }
 
     /**
       * A source that is backed by an internal resource.
@@ -85,7 +108,6 @@ object Ast {
     case class PkgFile(path: Path) extends Input {
       def perms: Set[Permission] = Set()
     }
-
   }
 
   /**
@@ -96,6 +118,7 @@ object Ast {
   case class Source(input: Input, data: Array[Char], stable: Boolean) extends Sourceable {
 
     def name: String = input match {
+      case Input.StdLib(name,_) => name
       case Input.Text(name, _, _) => name
       case Input.TxtFile(path) => path.toString
       case Input.PkgFile(path) => path.toString

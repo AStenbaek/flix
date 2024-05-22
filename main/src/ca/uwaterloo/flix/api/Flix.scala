@@ -684,7 +684,7 @@ class Flix {
     * Returns the inputs for the given list of (path, text) pairs.
     */
   private def getLibraryInputs(xs: List[(String, String)]): List[Input] = xs.foldLeft(List.empty[Input]) {
-    case (xs, (name, text)) => Input.Text(name, text, stable = true) :: xs
+    case (xs, (name, text)) => Input.StdLib(name, text) :: xs
   }
 
   /**

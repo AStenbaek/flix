@@ -44,6 +44,10 @@ object Reader {
       val result = mutable.Map.empty[Source, Unit]
       for (input <- inputs) {
         input match {
+          case Input.StdLib(name, text) =>
+            val src = Source(input, text.toCharArray, true)
+            result += (src -> ())
+
           case Input.Text(name, text, stable) =>
             val src = Source(input, text.toCharArray, stable)
             result += (src -> ())
