@@ -25,6 +25,29 @@ import java.util.Objects
 object Ast {
 
   /**
+   * A common super-type for package permissions.
+   */
+  sealed trait Permission
+
+  object Permission {
+
+    /**
+     * Permission to use Java interoperability features.
+     */
+    case object JavaInterop
+
+    /**
+     * Permission to use unchecked casts.
+     */
+    case object UncheckedCast
+
+    /**
+     * Permission to have an effect.
+     */
+    case object Effect
+  }
+
+  /**
     * A common super-type for inputs.
     */
   sealed trait Input
