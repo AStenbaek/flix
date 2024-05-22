@@ -50,7 +50,9 @@ object Ast {
   /**
     * A common super-type for inputs.
     */
-  sealed trait Input
+  sealed trait Input {
+    def perms: Set[Permission]
+  }
 
   object Input {
 
@@ -66,17 +68,23 @@ object Ast {
         case that: Text => this.name == that.name
         case _ => false
       }
+
+      def perms: Set[Permission] = Set()
     }
 
     /**
       * A source that is backed by a regular file.
       */
-    case class TxtFile(path: Path) extends Input
+    case class TxtFile(path: Path) extends Input {
+      def perms: Set[Permission] = Set()
+    }
 
     /**
       * A source that is backed by flix package file.
       */
-    case class PkgFile(path: Path) extends Input
+    case class PkgFile(path: Path) extends Input {
+      def perms: Set[Permission] = Set()
+    }
 
   }
 
