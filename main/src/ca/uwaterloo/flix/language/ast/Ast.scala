@@ -49,18 +49,10 @@ object Ast {
     case object Effect extends Permission
   }
 
-  private val fullPermission: Set[Permission] = Set(
-    Permission.JavaInterop,
-    Permission.UncheckedCast,
-    Permission.Effect
-  )
-
   /**
     * A common super-type for inputs.
     */
-  sealed trait Input {
-    def perms: Set[Permission]
-  }
+  sealed trait Input
 
   object Input {
 
@@ -74,9 +66,6 @@ object Ast {
         case that: StdLib => this.name == that.name
         case _ => false
       }
-
-      // The standard library is fully trusted.
-      def perms: Set[Permission] = fullPermission
     }
 
     /**
@@ -91,23 +80,17 @@ object Ast {
         case that: Text => this.name == that.name
         case _ => false
       }
-
-      def perms: Set[Permission] = Set()
     }
 
     /**
       * A source that is backed by a regular file.
       */
-    case class TxtFile(path: Path) extends Input {
-      def perms: Set[Permission] = Set()
-    }
+    case class TxtFile(path: Path) extends Input
 
     /**
       * A source that is backed by flix package file.
       */
-    case class PkgFile(path: Path) extends Input {
-      def perms: Set[Permission] = Set()
-    }
+    case class PkgFile(path: Path) extends Input
   }
 
   /**
