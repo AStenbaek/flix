@@ -366,7 +366,8 @@ object Main {
                      XPerfPar: Boolean = false,
                      xchaosMonkey: Boolean = false,
                      xiterations: Int = 1000,
-                     files: Seq[File] = Seq())
+                     files: Seq[File] = Seq(),
+                     countEffect: Boolean = false)
 
   /**
     * A case class representing possible commands.
@@ -410,6 +411,8 @@ object Main {
     case object CompilerMemory extends Command
 
     case object Zhegalkin extends Command
+
+    case object CountEffect extends Command
 
   }
 
@@ -493,6 +496,10 @@ object Main {
           .action((v, c) => c.copy(XPerfN = Some(v)))
           .text("number of compilations")
       ).hidden()
+
+      cmd("count-effect")
+        .action((_, c) => c.copy(command = Command.CountEffect))
+        .text("count effect annotations in input file")
 
       note("")
 
