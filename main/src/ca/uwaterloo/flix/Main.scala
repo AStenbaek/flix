@@ -326,6 +326,11 @@ object Main {
         case Command.Zhegalkin =>
           ZhegalkinPerf.run(options.XPerfN)
 
+        case Command.CountEffect =>
+          println("Time to count effects!")
+          EffectCount.run(cwd, cmdOpts)
+          System.exit(0)
+
       }
     }
 
@@ -494,7 +499,7 @@ object Main {
       cmd("Xzhegalkin").action((_, c) => c.copy(command = Command.Zhegalkin)).children(
         opt[Int]("n")
           .action((v, c) => c.copy(XPerfN = Some(v)))
-          .text("number of compilations")
+          .text("  number of compilations")
       ).hidden()
 
       cmd("count-effect")

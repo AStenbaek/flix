@@ -925,7 +925,7 @@ class Flix {
   /**
     * Returns a list of inputs constructed from the strings and paths passed to Flix.
     */
-  private def getInputs: List[Input] = {
+  def getInputs: List[Input] = {
     val lib = options.lib match {
       case LibLevel.Nix => Nil
       case LibLevel.Min => getLibraryInputs(coreLibrary)
