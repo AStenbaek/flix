@@ -327,7 +327,6 @@ object Main {
           ZhegalkinPerf.run(options.XPerfN)
 
         case Command.CountEffect =>
-          println("Time to count effects!")
           EffectCount.run(cwd, cmdOpts)
           System.exit(0)
 
