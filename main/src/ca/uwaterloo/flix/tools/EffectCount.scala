@@ -49,17 +49,16 @@ object EffectCount {
       }
     }
     flix.threadPool = new ForkJoinPool(Options.Default.threads)
-    val (afterReader, _readerErrors) = Reader.run(flix.getInputs, AvailableClasses.empty)
-    val (afterLexer, _lexerErrors) = Lexer.run(afterReader, Map.empty, ChangeSet.Everything)
-    val (afterParser, _parserErrors) = Parser2.run(afterLexer, SyntaxTree.empty, ChangeSet.Everything)
+    val (afterReader, _) = Reader.run(flix.getInputs, AvailableClasses.empty)
+    val (afterLexer, _) = Lexer.run(afterReader, Map.empty, ChangeSet.Everything)
+    val (afterParser, _) = Parser2.run(afterLexer, SyntaxTree.empty, ChangeSet.Everything)
     val progTree = afterParser.units.head._2
-    //Console.println(visitTree(progTree))
-    //printTree(progTree)
-    visitTree(progTree)
+    //Console.println(pretty(render(visitTree(progTree))))
+    printTree(progTree)
     flix.threadPool.shutdown()
   }
 
-  private def visitTree(t: Child): Int = {
+  private def visitTree(t: Child): JValue = {
     var count = 0
     var obj: List[JField] = List()
 
@@ -76,7 +75,6 @@ object EffectCount {
 
     def innerSig(s: Array[Child]): JField = {
       var id: String = ""
-      val value: JValue = JString("")
 
       var typeCount = 0
       var effectCount = 0
@@ -95,8 +93,6 @@ object EffectCount {
       s.foreach({
         case Tree(SyntaxTree.TreeKind.Ident, c, _) =>
           id = getIdent(c).getOrElse("")
-       // case Tree(_, c, _) => counter(c)
-       // case Token(_, _, _, _, _, _) => ()
         case _ => ()
       })
       counter(s)
@@ -114,18 +110,18 @@ object EffectCount {
     }
 
     inner(t)
-    Console.println(pretty(render(JObject(obj))))
-    //Console.println(JObject(obj).toString())
-    count
+    JObject(obj)
   }
+
   private def printTree(t: Child): Unit = {
     val spacer = " "
     def inner(t: Child, depth: Int): Unit = {
+      val dRep = if (depth < 10) s"$depth " else s"$depth"
       t match {
         case Tree(k, c, _) =>
-          Console.println(spacer.repeat(depth) + k)
+          Console.println(s"  ${spacer.repeat(depth+1)}$k")
           c.foreach(inner(_, depth + 1))
-        case Token(k,_,_,_,_,_) => Console.println(spacer.repeat(depth) + k)
+        case Token(k,_,_,_,_,_) => Console.println(s"$dRep${spacer.repeat(depth+1)}$k")
       }
     }
     inner(t, 0)
