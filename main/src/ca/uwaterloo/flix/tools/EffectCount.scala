@@ -62,8 +62,8 @@ object EffectCount {
     val (afterParser, _) = Parser2.run(afterLexer, SyntaxTree.empty, ChangeSet.Everything)
     val progTree = afterParser.units.head._2
     val toks = ("tokens", JInt(countTokens(afterLexer.head._2)))
-    val jObj = JObject(toks :: visitTree(progTree))
-    Console.println(pretty(render(jObj)))
+    val sigs = ("sigs", JObject(visitTree(progTree)))
+    Console.println(pretty(render(JObject(List(toks, sigs)))))
     //printTree(progTree)
     flix.threadPool.shutdown()
   }
