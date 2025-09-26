@@ -17,8 +17,8 @@ package ca.uwaterloo.flix.tools
 
 import ca.uwaterloo.flix.Main.CmdOpts
 import ca.uwaterloo.flix.api.Flix
-import ca.uwaterloo.flix.language.ast.SyntaxTree.{Child, Tree}
-import ca.uwaterloo.flix.language.ast.TokenKind.NameLowerCase
+import ca.uwaterloo.flix.language.ast.SyntaxTree.{Child, Tree, TreeKind}
+import ca.uwaterloo.flix.language.ast.TokenKind.{NameGreek, NameLowerCase, NameUpperCase, UserDefinedOperator}
 import ca.uwaterloo.flix.language.ast.{ChangeSet, SyntaxTree, Token, TokenKind}
 import ca.uwaterloo.flix.language.ast.shared.{AvailableClasses, SecurityContext}
 import ca.uwaterloo.flix.language.phase.{Lexer, Parser2, Reader}
@@ -33,6 +33,14 @@ import java.util.concurrent.ForkJoinPool
   *
   */
 object EffectCount {
+  var id = 0
+  private def nextId(): Int = {
+    val x = id
+    id = id + 1;
+    x
+  }
+
+  private def resetId(): Unit = { id = 0 }
 
   def run(cwd: Path, cmdOpts: CmdOpts): Unit = {
     // configure Flix and add the paths.
@@ -53,24 +61,51 @@ object EffectCount {
     val (afterLexer, _) = Lexer.run(afterReader, Map.empty, ChangeSet.Everything)
     val (afterParser, _) = Parser2.run(afterLexer, SyntaxTree.empty, ChangeSet.Everything)
     val progTree = afterParser.units.head._2
-    //Console.println(pretty(render(visitTree(progTree))))
-    printTree(progTree)
+    val toks = ("tokens", JInt(countTokens(afterLexer.head._2)))
+    val jObj = JObject(toks :: visitTree(progTree))
+    Console.println(pretty(render(jObj)))
+    //printTree(progTree)
     flix.threadPool.shutdown()
   }
 
-  private def visitTree(t: Child): JValue = {
-    var count = 0
-    var obj: List[JField] = List()
+  private def countTokens(toks: Array[Token]): Int = {
+    toks.foldLeft(0)({case (acc, Token(kind,_,_,_,_,_)) =>
+      kind match {
+        case TokenKind.CommentDoc
+             | TokenKind.CommentBlock
+             | TokenKind.CommentLine => acc
+        case _ => acc + 1
+    }})
+  }
 
-    def inner(t: Child): Unit = {
-      t match {
-        case Tree(SyntaxTree.TreeKind.Decl.Def, c, _) => obj = innerSig(c) :: obj
-        case Tree(SyntaxTree.TreeKind.Type.Effect, children, _) =>
-          count += 1
-          children.foreach(inner)
-        case Tree(_, children, _) => children.foreach(inner)
-        case Token(_, _, _, _, _, _) => ()
+  private def visitTree(t: Child): List[JField] = {
+    var count = 0
+
+    def inner(t: Child): List[JField] = {
+      var obj: List[JField] = List()
+      def innerInner(t: Child): Unit = {
+        t match {
+          case Tree(SyntaxTree.TreeKind.Decl.Module, c, _) => {
+            val name = getIdent(c).getOrElse("")
+            obj = (name, JObject(c.flatMap(inner).toList)) :: obj
+          }
+          case Tree(SyntaxTree.TreeKind.Decl.Instance, c, _) => {
+            val itfName = getIdent(c).getOrElse("")
+            val typName = nextId()
+            val name = s"$itfName[$typName]"
+            obj = (name, JObject(c.flatMap(inner).toList)) :: obj
+          }
+          case Tree(SyntaxTree.TreeKind.Decl.Def, c, _) => obj = innerSig(c) :: obj
+          case Tree(SyntaxTree.TreeKind.Decl.Redef, c, _) => obj = innerSig(c) :: obj
+          case Tree(SyntaxTree.TreeKind.Type.Effect, children, _) =>
+            count += 1
+            children.foreach(innerInner)
+          case Tree(_, children, _) => children.foreach(innerInner)
+          case Token(_, _, _, _, _, _) => ()
+        }
       }
+      innerInner(t)
+      obj
     }
 
     def innerSig(s: Array[Child]): JField = {
@@ -93,6 +128,7 @@ object EffectCount {
       s.foreach({
         case Tree(SyntaxTree.TreeKind.Ident, c, _) =>
           id = getIdent(c).getOrElse("")
+
         case _ => ()
       })
       counter(s)
@@ -103,14 +139,24 @@ object EffectCount {
     }
 
     def getIdent(s: Array[Child]): Option[String] = {
-      s.headOption.flatMap({
-        case t @ Token(NameLowerCase, _, _, _, _, _) => Some(t.text)
-        case _ => None
+      s.foreach({
+        case t @ Token(NameLowerCase, _, _, _, _, _) => return Some(t.text)
+        case t @ Token(NameUpperCase, _, _, _, _, _) => return Some(t.text)
+        case t @ Token(UserDefinedOperator, _, _, _, _, _) => return Some(t.text)
+        case t @ Token(NameGreek, _, _, _, _, _) => return Some(t.text)
+        case Tree(SyntaxTree.TreeKind.QName, c, _) => getIdent(c) match {
+          case None => ()
+          case res => return res
+        }
+        case Tree(SyntaxTree.TreeKind.Ident, c, _) => getIdent(c) match {
+          case None => ()
+          case res => return res
+        }
+        case _ => ()
       })
+      None
     }
-
     inner(t)
-    JObject(obj)
   }
 
   private def printTree(t: Child): Unit = {
