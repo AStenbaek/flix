@@ -86,7 +86,7 @@ object EffectCount {
       def innerInner(t: Child): Unit = {
         t match {
           case Tree(SyntaxTree.TreeKind.Decl.Module, c, _) => {
-            val name = getIdent(c).getOrElse("")
+            val name = s"${nextId()}${getIdent(c).getOrElse("")}"
             obj = (name, JObject(c.flatMap(inner).toList)) :: obj
           }
           case Tree(SyntaxTree.TreeKind.Decl.Instance, c, _) => {
