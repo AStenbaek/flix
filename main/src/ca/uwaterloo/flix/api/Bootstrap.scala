@@ -925,11 +925,10 @@ class Bootstrap(val projectPath: Path, apiKey: Option[String]) {
   private def extractLibName(defn: TypedAst.Def): Option[String] = defn.sym.loc.sp1.source.input match {
     case Input.FileInPackage(packagePath, _, _, _) =>
       Some(resolveLibName(packagePath))
-
+    case Input.TxtFile(_, _) => Some("FlixMe")
     case Input.Unknown |
          Input.PkgFile(_, _) |
-         Input.Text(_, _, _) |
-         Input.TxtFile(_, _) => None
+         Input.Text(_, _, _) => None
   }
 
   private def validateDefn(originalSignatures: NamedTypeSchemes, defn: TypedAst.Def, uses: List[SourceLocation]): Option[BootstrapError.EffectUpgradeError] = {
