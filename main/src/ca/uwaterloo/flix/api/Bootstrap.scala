@@ -867,12 +867,21 @@ class Bootstrap(val projectPath: Path, apiKey: Option[String]) {
     Validation.mapN(check(flix)) {
       case root =>
         val path = getEffectLockFile(projectPath)
+        //val defs: Map[Library, List[TypedAst.Def]] = Map("FlixMe" -> root.defs.values.filter(_.spec.mod.isPublic).toList)
+        val defs: Map[Library, List[TypedAst.Def]] = Map("FlixMe" -> root.defs.values.filter(d => d.spec.mod.isPublic && (d.loc.sp1.source.input match {
+          case Input.TxtFile(_, _) => true
+          case _ => false
+        })).toList)
+        val ser = Serialization.serialize(defs)
+        FileOps.writeString(path, ser)
+        /*
+        val path = getEffectLockFile(projectPath)
         val (reachableDefs, _) = flix.reachableLibraryFunctions(root)
         val resolvedDefs = reachableDefs.map {
           case (path, defs) => resolveLibName(path) -> defs
         }
         val ser = Serialization.serialize(resolvedDefs)
-        FileOps.writeString(path, ser)
+        FileOps.writeString(path, ser)*/
     }
   }
 

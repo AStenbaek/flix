@@ -25,6 +25,7 @@ import ca.uwaterloo.flix.runtime.shell.Shell
 import ca.uwaterloo.flix.tools.*
 import ca.uwaterloo.flix.util.Validation.flatMapN
 import ca.uwaterloo.flix.util.*
+import ca.uwaterloo.flix.util.collection.ListMap
 
 import java.io.{File, PrintStream}
 import java.net.BindException

@@ -30,4 +30,6 @@ object SSymbol {
   case class EnumSym(namespace: List[String], text: String) extends SSymbol
 
   case class EffectSym(namespace: List[String], name: String) extends SSymbol
+
+  case class StructSym(namespace: List[String], text: String) extends SSymbol
 }

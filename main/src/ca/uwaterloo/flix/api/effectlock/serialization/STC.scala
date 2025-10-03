@@ -15,6 +15,8 @@
  */
 package ca.uwaterloo.flix.api.effectlock.serialization
 
+import ca.uwaterloo.flix.language.ast.Name
+
 sealed trait STC
 
 object STC {
@@ -57,7 +59,7 @@ object STC {
 
   case object RecordRowEmpty extends STC
 
-  // case class RecordRowExtend(label: SerializableName.Label) extends SerializableTypeConstructor
+   case class RecordRowExtend(label: String) extends STC
 
   case object Record extends STC
 
@@ -75,9 +77,9 @@ object STC {
 
   case class Enum(sym: SSymbol.EnumSym, kind: SKind) extends STC
 
-  // case class Struct(sym: Symbol.StructSym, kind: SerializableKind) extends SerializableTypeConstructor
+  case class Struct(sym: SSymbol.StructSym, kind: SKind) extends STC
   // case class RestrictableEnum(sym: Symbol.RestrictableEnumSym, kind: SerializableKind) extends SerializableTypeConstructor
-  // case class Native(clazz: Class[?]) extends SerializableTypeConstructor
+   case class Native(clazz: Class[?]) extends STC
   // case class JvmConstructor(constructor: Constructor[?]) extends SerializableTypeConstructor
   // case class JvmMethod(method: Method) extends SerializableTypeConstructor
   // case class JvmField(field: Field) extends SerializableTypeConstructor

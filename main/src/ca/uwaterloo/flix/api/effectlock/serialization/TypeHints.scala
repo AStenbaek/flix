@@ -15,6 +15,7 @@
  */
 package ca.uwaterloo.flix.api.effectlock.serialization
 
+import ca.uwaterloo.flix.language.ast.Name
 import org.json4s.{Formats, ShortTypeHints}
 
 object TypeHints {
@@ -52,6 +53,7 @@ object TypeHints {
     classOf[STC.Arrow],
     classOf[STC.ArrowWithoutEffect],
     STC.RecordRowEmpty.getClass,
+    classOf[STC.RecordRowExtend],
     // classOf[SerializableTypeConstructor.RecordRowExtend],
     STC.Record.getClass,
     STC.SchemaRowEmpty.getClass,
@@ -113,5 +115,7 @@ object TypeHints {
     // VarText
     SVT.Absent.getClass,
     classOf[SVT.SourceText],
+
+    classOf[Name.Label]
   )))
 }

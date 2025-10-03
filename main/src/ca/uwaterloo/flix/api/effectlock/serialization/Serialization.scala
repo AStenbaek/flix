@@ -16,7 +16,7 @@
 package ca.uwaterloo.flix.api.effectlock.serialization
 
 import ca.uwaterloo.flix.language.ast.shared.{Scope, SymUse, VarText}
-import ca.uwaterloo.flix.language.ast.{Kind, Scheme, SourceLocation, Symbol, Type, TypeConstructor, TypedAst}
+import ca.uwaterloo.flix.language.ast.{Kind, Name, Scheme, SourceLocation, Symbol, Type, TypeConstructor, TypedAst}
 import ca.uwaterloo.flix.util.InternalCompilerException
 import org.json4s.native.Serialization.{read, write}
 import org.json4s.Formats
@@ -43,13 +43,13 @@ object Serialization {
   }
 
   def deserialize(json: String): Option[Map[Library, NamedTypeSchemes]] = {
-    try {
+    //try {
       val deser = read[Map[Library, List[SDef]]](json)
       Some(toLibs(deser))
-    }
+   /* }
     catch {
       case _: Exception => None // TODO: Include error by returning Validation or Result
-    }
+    }*/
   }
 
   def deserializeTpe(tpe: String): Option[Type] = {
@@ -168,7 +168,9 @@ object Serialization {
     case TypeConstructor.Arrow(arity) => STC.Arrow(arity)
     case TypeConstructor.ArrowWithoutEffect(arity) => STC.ArrowWithoutEffect(arity)
     case TypeConstructor.RecordRowEmpty => STC.RecordRowEmpty
-    case TypeConstructor.RecordRowExtend(_) => ??? // SerializableTypeConstructor.RecordRowExtend(label)
+    case TypeConstructor.RecordRowExtend(label) => STC.RecordRowExtend(label.name)
+      //println("RECORD_ROW_EXTEND")
+      //STC.RecordRowExtend(label) // SerializableTypeConstructor.RecordRowExtend(label)
     case TypeConstructor.Record => STC.Record
     case TypeConstructor.Extensible => ???
     case TypeConstructor.SchemaRowEmpty => STC.SchemaRowEmpty
@@ -181,9 +183,10 @@ object Serialization {
       val serSym = SSymbol.EnumSym(sym.namespace, sym.text)
       val serKind = fromKind(kind)
       STC.Enum(serSym, serKind)
-    case TypeConstructor.Struct(_, _) => ??? // SerializableTypeConstructor.Struct(sym, kind)
+    case TypeConstructor.Struct(sym, kind) => STC.Struct(SSymbol.StructSym(sym.namespace, sym.name), fromKind(kind))
     case TypeConstructor.RestrictableEnum(_, _) => ??? // SerializableTypeConstructor.RestrictableEnum(sym, kind)
-    case TypeConstructor.Native(_) => ??? // SerializableTypeConstructor.Native(clazz)
+    case TypeConstructor.Native(clazz) => ???
+//      STC.Native(clazz) // SerializableTypeConstructor.Native(clazz)
     case TypeConstructor.JvmConstructor(_) => ??? // SerializableTypeConstructor.JvmConstructor(constructor)
     case TypeConstructor.JvmMethod(_) => ??? // SerializableTypeConstructor.JvmMethod(method)
     case TypeConstructor.JvmField(_) => ??? // SerializableTypeConstructor.JvmField(field)
@@ -333,5 +336,11 @@ object Serialization {
       val s = new Symbol.EffSym(ssym.namespace, ssym.name, SourceLocation.Unknown)
       TypeConstructor.Effect(s)
     case STC.RegionToStar => TypeConstructor.RegionToStar
+    case STC.Struct(sym, kind) => TypeConstructor.Struct(
+      new Symbol.StructSym(sym.namespace, sym.text, SourceLocation.Unknown),
+      toKind(kind)
+    )
+    case STC.Native(clazz) => TypeConstructor.Native(clazz)
+    case STC.RecordRowExtend(label) => TypeConstructor.RecordRowExtend(Name.Label(label, SourceLocation.Unknown))
   }
 }
