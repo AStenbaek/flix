@@ -20,6 +20,7 @@ import ca.uwaterloo.flix.language.ast.{Scheme, SourceLocation, Symbol}
 import ca.uwaterloo.flix.tools.pkg
 import ca.uwaterloo.flix.tools.pkg.{ManifestError, PackageError}
 import ca.uwaterloo.flix.util.Formatter
+import org.json4s.{JField, JObject, JString}
 
 sealed trait BootstrapError {
   /**
@@ -61,8 +62,16 @@ object BootstrapError {
 
   case class EffectUpgradeError(sym: Symbol.DefnSym, uses: List[SourceLocation], originalScheme: Scheme, newScheme: Scheme) extends BootstrapError {
     override def message(f: Formatter): String = {
-
-      s"""@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+      val originalEffect = JString(originalScheme.base.effects.mkString("{",", ", "}"))
+      val updatedEffect = JString(newScheme.base.effects.mkString("{", ", ", "}"))
+      val effectDiff = JString(newScheme.base.effects.diff(originalScheme.base.effects).mkString("{", ", ", "}"))
+      val jsonObject = JObject(List(
+        JField("original", originalEffect),
+        JField("updated", updatedEffect),
+        JField("difference", effectDiff),
+      ))
+      org.json4s.native.JsonMethods.compact(org.json4s.native.JsonMethods.render(jsonObject))
+/*      s"""@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
          |@  WARNING! YOU MAY BE SUBJECT TO A SUPPLY CHAIN ATTACK!  @
          |@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
          |            ~~ Effect signatures have changed! ~~
@@ -71,7 +80,7 @@ object BootstrapError {
          |$effectSets
          |
          |$useSites
-         |""".stripMargin
+         |""".stripMargin*/
     }
 
     private def effectSets: String = {
